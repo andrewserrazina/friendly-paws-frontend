@@ -21,12 +21,12 @@ const Dashboard = () => {
         }
 
         try {
-            const clientsResponse = await axios.get("https://friendly-paws-backend.onrender.com/clients/", {
+            const clientsResponse = await axios.get("process.env.REACT_APP_API_URL/clients/", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setClients(clientsResponse.data);
 
-            const bookingsResponse = await axios.get("https://friendly-paws-backend.onrender.com/bookings/", {
+            const bookingsResponse = await axios.get("process.env.REACT_APP_API_URL/bookings/", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setBookings(bookingsResponse.data);
@@ -44,7 +44,7 @@ const Dashboard = () => {
     const addClient = async () => {
         const token = localStorage.getItem("token");
         try {
-            const response = await axios.post("https://friendly-paws-backend.onrender.com/clients/", newClient, {
+            const response = await axios.post("process.env.REACT_APP_API_URL/clients/", newClient, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setClients([...clients, response.data]);
@@ -57,7 +57,7 @@ const Dashboard = () => {
     const removeClient = async (id) => {
         const token = localStorage.getItem("token");
         try {
-            await axios.delete(`https://friendly-paws-backend.onrender.com/clients/${id}`, {
+            await axios.delete(`process.env.REACT_APP_API_URL/clients/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setClients(clients.filter(client => client.id !== id));
@@ -74,7 +74,7 @@ const Dashboard = () => {
     }
 
     try {
-        const response = await axios.post("https://friendly-paws-backend.onrender.com/bookings/", newBooking, {
+        const response = await axios.post("process.env.REACT_APP_API_URL/bookings/", newBooking, {
             headers: { Authorization: `Bearer ${token}` },
         });
         setBookings([...bookings, response.data]);
@@ -87,7 +87,7 @@ const Dashboard = () => {
     const removeBooking = async (id) => {
     const token = localStorage.getItem("token");
     try {
-        await axios.delete(`https://friendly-paws-backend.onrender.com/bookings/${id}`, {
+        await axios.delete(`process.env.REACT_APP_API_URL/bookings/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
         });
         setBookings(bookings.filter(booking => booking.id !== id));
