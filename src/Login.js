@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API_URL = "https://friendly-paws-backend.onrender.com"; // Ensure correct URL
+
 const Login = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -10,20 +12,49 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setError(null); // Reset error before new request
+
         try {
-            const response = await axios.post("https://friendly-paws-backend.onrender.com/login/", new URLSearchParams({
-                username,
-                password
-            }), {
-                headers: { "Content-Type": "application/x-www-form-urlencoded" }
-            });
+            // Attempt login using JSON (preferred)
+            const response = await axios.post(
+                `${API_URL}/login/`,
+                {
+                    username,
+                    password,
+                },
+                {
+                    headers: { "Content-Type": "application/json" }, // JSON data format
+                }
+            );
 
             console.log("✅ Login successful:", response.data);
             localStorage.setItem("token", response.data.access_token); // Save token
-            navigate("/dashboard"); // Redirect after login
+            navigate("/dashboard"); // Redirect to dashboard
         } catch (error) {
-            console.error("❌ Login error:", error.response || error);
-            setError("Invalid username or password");
+            console.error("❌ Login error:", error.response?.data || error.message);
+
+            // Check for a 422 error (wrong request format) and retry with form-data
+            if (error.response?.status === 422) {
+                console.warn("🔄 Retrying login with form-data...");
+                try {
+                    const formResponse = await axios.post(
+                        `${API_URL}/login/`,
+                        new URLSearchParams({ username, password }), // Form data fallback
+                        {
+                            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        }
+                    );
+
+                    console.log("✅ Login successful (form-data fallback):", formResponse.data);
+                    localStorage.setItem("token", formResponse.data.access_token);
+                    navigate("/dashboard");
+                } catch (formError) {
+                    console.error("❌ Login failed (form-data fallback):", formError.response?.data || formError.message);
+                    setError("Invalid username or password");
+                }
+            } else {
+                setError("Invalid username or password");
+            }
         }
     };
 
