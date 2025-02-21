@@ -1,172 +1,83 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import axios from "axios";
 
 const Dashboard = () => {
     const [clients, setClients] = useState([]);
     const [bookings, setBookings] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showClientModal, setShowClientModal] = useState(false);
-    const [showBookingModal, setShowBookingModal] = useState(false);
-    const [newClient, setNewClient] = useState({ name: "", email: "", phone: "" });
-    const [newBooking, setNewBooking] = useState({ client_id: "", pet_id: "", service: "", date: "" });
-    const navigate = useNavigate();
-
-    const fetchData = async () => {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            navigate("/login");
-            return;
-        }
-
-        try {
-            const clientsResponse = await axios.get("process.env.REACT_APP_API_URL/clients/", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setClients(clientsResponse.data);
-
-            const bookingsResponse = await axios.get("process.env.REACT_APP_API_URL/bookings/", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setBookings(bookingsResponse.data);
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                alert("Session expired. Please log in again.");
-                localStorage.removeItem("token");
-                navigate("/login");
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const addClient = async () => {
-        const token = localStorage.getItem("token");
-        try {
-            const response = await axios.post("process.env.REACT_APP_API_URL/clients/", newClient, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setClients([...clients, response.data]);
-            setShowClientModal(false);
-        } catch (error) {
-            console.error("Error adding client:", error);
-        }
-    };
-
-    const removeClient = async (id) => {
-        const token = localStorage.getItem("token");
-        try {
-            await axios.delete(`process.env.REACT_APP_API_URL/clients/${id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setClients(clients.filter(client => client.id !== id));
-        } catch (error) {
-            console.error("Error deleting client:", error);
-        }
-    };
-
-    const addBooking = async () => {
-    const token = localStorage.getItem("token");
-    if (!newBooking.client_id || !newBooking.pet_id || !newBooking.service || !newBooking.date) {
-        alert("All fields are required.");
-        return;
-    }
-
-    try {
-        const response = await axios.post("process.env.REACT_APP_API_URL/bookings/", newBooking, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        setBookings([...bookings, response.data]);
-        setShowBookingModal(false);
-    } catch (error) {
-        console.error("Error adding booking:", error.response ? error.response.data : error);
-    }
-};
-
-    const removeBooking = async (id) => {
-    const token = localStorage.getItem("token");
-    try {
-        await axios.delete(`process.env.REACT_APP_API_URL/bookings/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        setBookings(bookings.filter(booking => booking.id !== id));
-    } catch (error) {
-        console.error("Error deleting booking:", error.response ? error.response.data : error);
-    }
-};
 
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const [clientsRes, bookingsRes] = await Promise.all([
+                    axios.get("https://friendly-paws-backend.onrender.com/clients/", {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    axios.get("https://friendly-paws-backend.onrender.com/bookings/", {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
+                setClients(clientsRes.data);
+                setBookings(bookingsRes.data);
+            } catch (error) {
+                console.error("❌ Error fetching data:", error);
+            }
+        };
         fetchData();
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-100 p-6">
-            <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">📋 Pet Sitting Dashboard</h1>
-
-            <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-white shadow-md rounded-lg p-4">
-                    <h2 className="text-xl font-semibold text-gray-700 flex justify-between">
+        <div className="flex min-h-screen bg-gray-100">
+            {/* Sidebar */}
+            <aside className="w-64 bg-white shadow-md p-4">
+                <h2 className="text-2xl font-bold text-gray-700">🐾 Friendly Paws</h2>
+                <nav className="mt-6">
+                    <Link to="/dashboard" className="block py-2 px-4 text-gray-700 hover:bg-gray-200 rounded">
+                        📊 Dashboard
+                    </Link>
+                    <Link to="/clients" className="block py-2 px-4 text-gray-700 hover:bg-gray-200 rounded">
                         🐶 Clients
-                        <button className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-                            onClick={() => setShowClientModal(true)}>➕ Add</button>
-                    </h2>
-                    {loading ? <p className="text-gray-500">Loading clients...</p> : (
-                        <ul className="mt-2 space-y-2">
-                            {clients.map((client) => (
-                                <li key={client.id} className="p-2 border-b">
-                                    <Link to={`/clients/${client.id}`} className="text-blue-500 hover:underline">
-                                        {client.name} - {client.email}
-                                    </Link>
-                                </li>
-                            ));
-                            }
-                            ))}
-                        </ul>
-                    )}
-                </div>
-
-                <div className="bg-white shadow-md rounded-lg p-4">
-                    <h2 className="text-xl font-semibold text-gray-700 flex justify-between">
+                    </Link>
+                    <Link to="/bookings" className="block py-2 px-4 text-gray-700 hover:bg-gray-200 rounded">
                         📅 Bookings
-                        <button className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
-                            onClick={() => setShowBookingModal(true)}>➕ Add</button>
-                    </h2>
-                    {loading ? <p className="text-gray-500">Loading bookings...</p> : (
-                        <ul className="mt-2 space-y-2">
-                            {bookings.map(booking => (
-                                <li key={booking.id} className="p-3 border rounded-lg bg-gray-50 shadow flex justify-between">
-                                    <div>
-                                        <p className="text-lg">{booking.service}</p>
-                                        <p className="text-sm text-gray-500">📅 {booking.date}</p>
-                                    </div>
-                                    <button className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-                                        onClick={() => removeBooking(booking.id)}>❌ Remove</button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-            </div>
+                    </Link>
+                </nav>
+            </aside>
 
-            {/* Client Modal */}
-            {showClientModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="bg-white p-4 rounded shadow-lg">
-                        <h3 className="text-lg font-bold">Add Client</h3>
-                        <input type="text" placeholder="Name" className="border p-2 w-full mt-2"
-                            onChange={(e) => setNewClient({ ...newClient, name: e.target.value })} />
-                        <input type="email" placeholder="Email" className="border p-2 w-full mt-2"
-                            onChange={(e) => setNewClient({ ...newClient, email: e.target.value })} />
-                        <input type="text" placeholder="Phone" className="border p-2 w-full mt-2"
-                            onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })} />
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded mt-2" onClick={addClient}>Add</button>
-                        <button className="ml-2 text-gray-500" onClick={() => setShowClientModal(false)}>Cancel</button>
+            {/* Main Content */}
+            <main className="flex-1 p-6">
+                <h1 className="text-3xl font-semibold text-gray-800">📊 Dashboard</h1>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-3 gap-6 mt-6">
+                    <div className="bg-white p-4 rounded-lg shadow-md">
+                        <h2 className="text-lg font-semibold">Total Clients</h2>
+                        <p className="text-2xl font-bold">{clients.length}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg shadow-md">
+                        <h2 className="text-lg font-semibold">Upcoming Bookings</h2>
+                        <p className="text-2xl font-bold">{bookings.length}</p>
                     </div>
                 </div>
-            )}
 
+                {/* Clients Section */}
+                <div className="mt-6 bg-white p-4 rounded-lg shadow-md">
+                    <h2 className="text-xl font-semibold">🐾 Clients</h2>
+                    <ul className="divide-y divide-gray-200">
+                        {clients.map((client) => (
+                            <li key={client.id} className="py-2 flex justify-between items-center">
+                                <Link to={`/clients/${client.id}`} className="text-blue-500 hover:underline">
+                                    {client.name} - {client.email}
+                                </Link>
+                                <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                                    Remove
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </main>
         </div>
     );
 };
