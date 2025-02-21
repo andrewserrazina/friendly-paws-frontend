@@ -113,15 +113,14 @@ const Dashboard = () => {
                     </h2>
                     {loading ? <p className="text-gray-500">Loading clients...</p> : (
                         <ul className="mt-2 space-y-2">
-                            {clients.map(client => (
-                                <li key={client.id} className="p-3 border rounded-lg bg-gray-50 shadow flex justify-between">
-                                    <div>
-                                        <p className="text-lg">{client.name}</p>
-                                        <p className="text-sm text-gray-500">{client.email} | {client.phone}</p>
-                                    </div>
-                                    <button className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-                                        onClick={() => removeClient(client.id)}>❌ Remove</button>
+                            {clients.map((client) => (
+                                <li key={client.id} className="p-2 border-b">
+                                    <Link to={`/clients/${client.id}`} className="text-blue-500 hover:underline">
+                                        {client.name} - {client.email}
+                                    </Link>
                                 </li>
+                            ));
+                            }
                             ))}
                         </ul>
                     )}
